@@ -1023,12 +1023,8 @@ func (cn *conn) recvMessage(r *readBuf) (byte, error) {
 	// read the type and length of the message that follows
 	t := x[0]
 	n := int(binary.BigEndian.Uint32(x[1:])) - 4
-	var y []byte
-	if n <= len(cn.scratch) {
-		y = cn.scratch[:n]
-	} else {
-		y = make([]byte, n)
-	}
+	// work around data race https://github.com/coder/internal/issues/731
+	var y []byte = make([]byte, n)
 	_, err = io.ReadFull(cn.buf, y)
 	if err != nil {
 		return 0, err
